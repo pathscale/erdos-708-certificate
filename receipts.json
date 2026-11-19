@@ -1,0 +1,27 @@
+{
+  "run_id": "erdos-708-2026-11-18",
+  "system": "Karen (24x AI Research)",
+  "author": "C. Bergström",
+  "affiliation": "24x AI Research",
+  "orcid": "0009-0008-7153-1817",
+  "problem_id": 708,
+  "exact_values_proved": {
+    "g4": 5,
+    "g5": 6,
+    "g6": 8
+  },
+  "constructive_lower_bounds": {
+    "g7_min": 9,
+    "g8_min": 11
+  },
+  "g6_cert_min_m": 7,
+  "g6_cert_max_m": 3481,
+  "g6_cert_rows": 3475,
+  "g6_cert_crt_leaves_7_to_80": 15712,
+  "g6_cert_crt_leaves_81_to_3481": 0,
+  "g6_cert_slot_pruned_branches": 24628129260,
+  "smooth7_analytic_bridge_values": 354,
+  "certificate_raw_bytes": 169969,
+  "certificate_zst_bytes": 17418,
+  "certificate_raw_sha256": "65b22b54e7f3b652a20d1812ede4cd7664f12c5d230338fea9608acbd9792e68"
+}

@@ -1,0 +1,26 @@
+# Certified Numerical Constants for Erdős Problem #708
+
+- **Author:** C. Bergström (`24x AI Research`, ORCID `0009-0008-7153-1817`)
+- **System:** `Karen` (`24x AI Research`)
+- **Exact small-$n$ values proved:**
+  - $g(3) = 4$ ($A_3 = \{77, 91, 143\}$, $M = 143$, $x_4 = 631{,}559$)
+  - $g(4) = 5$ ($A_4 = \{49, 77, 91, 143\}$, $M = 143$, $x_4 = 631{,}559$)
+  - $g(5) = 6$ ($A_5 = \{289, 299, 323, 391, 437\}$, $M = 437$, $x_6 = 581{,}200{,}167$)
+  - $g(6) = 8$ ($A_6 = \{221, 289, 299, 323, 391, 437\}$, $M = 437$, $x_6 = 581{,}200{,}167$)
+- **Constructive lower bounds:**
+  - $g(7) \ge 9$ ($A_7 = A_8 \setminus \{2419\}$, $M = 3{,}233$, $x_8 = 85{,}145{,}283{,}391{,}654{,}366{,}755$)
+  - $g(8) \ge 11$ ($A_8 = \{41, 43, 47, 53\} \times \{59, 61\}$, $M = 3{,}233$, $x_8 = 85{,}145{,}283{,}391{,}654{,}366{,}755$)
+- **Finite $g(6) \le 8$ certificate (`data/erdos708-g6-cert.rec.zst`):**
+  - Contiguous range: $7 \le M \le 3{,}481$ (`3,475` rows)
+  - Universal-$x$ CRT leaves ($7 \le M \le 80$): `15,712` (`15,709` in $7 \le M \le 63$, `2` at $M = 72$, `1` at $M = 80$)
+  - Universal-$x$ CRT leaves ($81 \le M \le 3{,}481$): `0`
+  - Slot-pruned branches: `24,628,129,260`
+  - Compressed size: `17,418` bytes (`.zst`)
+  - Decompressed size: `169,969` bytes (`.rec`)
+  - Decompressed SHA-256: `65b22b54e7f3b652a20d1812ede4cd7664f12c5d230338fea9608acbd9792e68`
+- **Analytic closure cutoffs:**
+  - $n = 3$ ($\{2, 3\}$-smooth): $M \ge 184$
+  - $n = 4$ ($\{2, 3, 5\}$-smooth): $M \ge 9{,}702$
+  - $n = 6$, Case 1 ($\{2, 3, 5, 7\}$-smooth): $M \ge 56{,}125$ (`354` smooth values in $[3482, 56124]$ verified)
+  - $n = 6$, Case 2 ($d = 5, 4, 3$): $M \ge 3{,}137$, $16{,}465$, $576{,}241$
+  - $n = 6$, Case 3b ($T_6(M, q) > M^4$): $M \ge 360{,}065$

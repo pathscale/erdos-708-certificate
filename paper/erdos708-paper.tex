@@ -1,0 +1,324 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.95in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,url,array}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\DeclareMathOperator{\lcm}{lcm}
+\DeclareMathOperator{\fs}{fs}
+
+\title{Exact Small-$n$ Values ($g(4) = 5$, $g(5) = 6$, $g(6) = 8$) and\\ Constructive Lower Bounds ($g(7) \ge 9$, $g(8) \ge 11$) for Erd\H{o}s Problem 708}
+\author{C. Bergstr\"om \\ 24x AI Research \\ \texttt{ORCID: 0009-0008-7153-1817}}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+For $n \ge 1$, let $g(n)$ denote the smallest integer such that for every $n$-element subset $A \subseteq \mathbb{Z}_{\ge 2}$ with maximum $M = \max(A)$ and every interval $I$ of $M$ consecutive positive integers, there exists a subset $B \subseteq I$ of cardinality $|B| \le g(n)$ satisfying $\prod_{a \in A} a \mid \prod_{b \in B} b$. Erd\H{o}s and Sur\'anyi (1959) proved $g(3) = 4$ and $g(n) \ge (2 - o(1)) n$, and Erd\H{o}s Problem 708 asks whether $g(n) \le (2 + o(1)) n$. We determine the exact values $g(4) = 5$, $g(5) = 6$, and $g(6) = 8$, and construct explicit Chinese Remainder Theorem witnesses establishing $g(7) \ge 9$ and $g(8) \ge 11$. Our upper-bound proofs combine sum-maximal divisor-closure and interval-splitting reductions, an unrestricted Universal Cumulative-GCD Slot Theorem (yielding the bipartite spanning-forest bound $\tau(A, I) \le 2n - r - s + 1$, achieved with equality on our $n = 8$ witness), universal prime-support elimination, and $g(d)$-subset tail decoupling. These structural reductions pair certified exhaustive verification below explicit finite cutoffs ($7 \le M \le 3{,}481$ for $n = 6$) with closed-form descending factor-packing bounds for all larger $M$. Unconditional asymptotic upper bounds derived from related peeling and linear-programming duality techniques are developed in the companion manuscript~\cite{bergstrom26asymptotic}.
+\end{abstract}
+
+\section{Introduction, Prior Work, and Main Results}
+
+For a finite subset $A = \{a_1 < a_2 < \dots < a_n\} \subseteq \mathbb{Z}_{\ge 2}$ with maximum element $M = a_n$ and an interval $I = \{x + 1, x + 2, \dots, x + M\}$ of $M$ consecutive positive integers ($x \in \mathbb{Z}_{\ge 0}$), define the minimum product-cover number
+\[
+\tau(A, I) := \min\Bigl\{ |B| : B \subseteq I, \; \prod_{a \in A} a \;\Big|\; \prod_{b \in B} b \Bigr\},
+\]
+and, following Erd\H{o}s and Sur\'anyi~\cite{erdossuranyi59} and Bloom~\cite{bloom708}, define the Erd\H{o}s--Sur\'anyi function\footnote{Requiring $|B| \le g(n)$ rather than literal equality $|B| = g(n)$ is essential (as also observed by L.~Mazur on the \emph{Erd\H{o}s Problems} forum): taking $A = \{2, \dots, n + 1\}$ on $I = \{1, \dots, n + 1\}$ forces $|B| \le |I| = n + 1$, whereas $g(n) \ge (2 - o(1)) n$.}
+\[
+g(n) := \sup\bigl\{ \tau(A, I) : A \subseteq \mathbb{Z}_{\ge 2}, \; |A| = n, \; I = \{x + 1, \dots, x + \max(A)\}, \; x \ge 0 \bigr\}.
+\]
+
+This problem was posed in 1959 by Erd\H{o}s and Sur\'anyi~\cite{erdossuranyi59} and highlighted by Erd\H{o}s in his 1992 and 1995 problem papers~\cite{erdos92c,erdos95} for determining whether $g(n) \le (2 + o(1)) n$, or whether the strict inequality $g(n) \le 2n$ holds for every $n \ge 1$ (catalogued as Problem 708 in Bloom's \emph{Erd\H{o}s Problems} database~\cite{bloom708}).
+
+\paragraph{Prior work.}
+Gallai observed $g(2) = 2$ and $g(3) \ge 4$, and Erd\H{o}s and Sur\'anyi~\cite{erdossuranyi59} proved $g(3) = 4$ together with the asymptotic lower bound $g(n) \ge (2 - o(1)) n$, achieved by taking $A = \{p_i p_j : 1 \le i < j \le \ell\}$ for primes $p_1 < \dots < p_\ell$ satisfying $p_\ell^2 < 2 p_1^2$ and centering a single multiple of $p_1 \cdots p_\ell$ inside $I$. In September 2026, Chen~\cite{chen26} established the first unconditional upper bounds depending only on $n$, proving $g(n) \le 12n$ (formalized end to end in Lean 4) and $g(n) \le 11n$ via LP duality and weighted prime-factor hinge certificates, proving $\tau(A, I) \le 2n$ in the long-interval regime $M \ge 8n^3$, and recording computational lower bounds $g(4) \ge 5$, $g(5) \ge 6$, $g(10) \ge 14$, and $g(12) \ge 17$.
+
+\paragraph{Scope and main results.}
+The asymptotic conjecture $g(n) \le (2 + o(1)) n$ remains open in the intermediate interval regime $2n < M < 8n^3$ (for $M \le 2n$, $\binom{x+M}{M} \in \mathbb{Z}$ gives $\tau(A, I) \le M \le 2n$). This paper establishes the exact values of $g(n)$ for $n \in \{4, 5, 6\}$ via hybrid analytic and computer-assisted proofs (pairing certified finite verification below explicit cutoffs with analytic slot-packing reductions above), together with constructive lower bounds for $n \in \{7, 8\}$:
+
+\begin{theorem}[Exact small-$n$ values and constructive lower bounds]
+\label{thm:main}
+The Erd\H{o}s--Sur\'anyi function satisfies
+\[
+g(1) = 1, \quad g(2) = 2, \quad g(3) = 4, \quad g(4) = 5, \quad g(5) = 6, \quad g(6) = 8,
+\]
+together with the constructive lower bounds $g(7) \ge 9$ and $g(8) \ge 11$.
+\end{theorem}
+
+Notice that the successive differences $g(n) - g(n - 1)$ for $n = 2, \dots, 6$ are $1, 2, 1, 1, 2$, and between $n = 6$ and $n = 8$ the function increases by at least $3$ ($g(8) - g(6) \ge 11 - 8 = 3$). Table~\ref{tab:summary} summarizes the certified bounds and extremal witnesses for $1 \le n \le 8$.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{ccp{5.3cm}rp{4.3cm}}
+\toprule
+$n$ & Value / Bound & Extremal Lower-Bound Witness $A_n$ & $M = \max(A_n)$ & Reference / Status \\
+\midrule
+$1$ & $g(1) = 1$ & $A_1 = \{2\}$ at $x = 0$ ($I = \{1, 2\}$) & $2$ & Trivial \\
+$2$ & $g(2) = 2$ & $A_2 = \{2, 3\}$ at $x = 1$ ($I = \{2, 3, 4\}$) & $3$ & Gallai~\cite{erdossuranyi59}; Cor.~\ref{cor:absorb} \\
+$3$ & $g(3) = 4$ & $A_3 = \{77, 91, 143\}$ at $x = 631{,}559$ & $143$ & Erd\H{o}s--Sur\'anyi~\cite{erdossuranyi59}; Thm.~\ref{thm:g345} \\
+$4$ & $\mathbf{g(4) = 5}$ & $A_4 = \{49, 77, 91, 143\}$ at $x = 631{,}559$ & $143$ & \textbf{Exact theorem} (Prop.~\ref{prop:g34}, Thm.~\ref{thm:g345}) \\
+$5$ & $\mathbf{g(5) = 6}$ & $A_5 = \{289, 299, 323, 391, 437\}$ at $x = 581{,}200{,}167$ & $437$ & \textbf{Exact theorem} (Prop.~\ref{prop:g56}, Thm.~\ref{thm:g345}) \\
+$6$ & $\mathbf{g(6) = 8}$ & $A_6 = \{221, 289, 299, 323, 391, 437\}$ at $x = 581{,}200{,}167$ & $437$ & \textbf{Exact theorem} (Prop.~\ref{prop:g56}, Thm.~\ref{thm:g6}) \\
+$7$ & $\mathbf{g(7) \ge 9}$ & $A_7 = A_8 \setminus \{2419\}$ at $x = x_8$ & $3{,}233$ & \textbf{Lower bound} (Prop.~\ref{prop:g78}) \\
+$8$ & $\mathbf{g(8) \ge 11}$ & $A_8 = \{41, 43, 47, 53\} \times \{59, 61\}$ at $x = x_8$ & $3{,}233$ & \textbf{Lower bound} (Prop.~\ref{prop:g78}) \\
+\bottomrule
+\end{tabular}
+\caption{Exact values and constructive lower bounds for the Erd\H{o}s--Sur\'anyi function $g(n)$, where $x_8 = 85{,}145{,}283{,}391{,}654{,}366{,}755$.}
+\label{tab:summary}
+\end{table}
+
+\section{Constructive Lower Bounds for $3 \le n \le 8$}
+
+For a prime $p$ and integer $m \ge 1$, write $v_p(m)$ for the $p$-adic valuation of $m$, write $A_p := \{a \in A : p \mid a\}$, and write $D_p(A) := \sum_{a \in A} v_p(a)$ for the total prime demand of $A$ at $p$. More generally, for any prime-demand vector $D = (D_p)_{p \le M}$ supported on $S \subseteq \{p \le M\}$, write
+\[
+\tau(D|_S, I) := \min\Bigl\{ |B| : B \subseteq I, \; \forall p \in S, \; \sum_{b \in B} v_p(b) \ge D_p \Bigr\}.
+\]
+Then $\prod_{a \in A} a \mid \prod_{b \in B} b$ holds if and only if $\sum_{b \in B} v_p(b) \ge D_p(A)$ for every prime $p \le M$.
+
+\begin{proposition}[$g(3) \ge 4$ and $g(4) \ge 5$]
+\label{prop:g34}
+Let $x_4 = 631{,}559$ and $I = \{x_4 + 1, \dots, x_4 + 143\}$. Then $A_3 = \{77, 91, 143\} = \{7 \cdot 11, 7 \cdot 13, 11 \cdot 13\}$ satisfies $\tau(A_3, I) = 4$, and $A_4 = \{49, 77, 91, 143\}$ satisfies $\tau(A_4, I) = 5$.
+\end{proposition}
+\begin{proof}
+The active primes are $(7, 11, 13)$, with demand $(2, 2, 2)$ on $A_3$ and $(4, 2, 2)$ on $A_4$. Note that $x_4 + 72 = 631{,}631 = 7 \cdot 11 \cdot 13 \cdot 631$, so the center offset $j = 72$ has valuation vector $(v_7, v_{11}, v_{13}) = (1, 1, 1)$. For every $j \in \{1, \dots, 143\} \setminus \{72\}$, $|j - 72| \le 71 < 7 \cdot 11 = 77$, so $x_4 + j$ is divisible by at most one prime in $\{7, 11, 13\}$. Moreover, $x_4 + 2 = 631{,}561 \equiv 0 \pmod{49}$ ($j \in \{2, 51, 100\}$ have $v_7 = 2$, with $7^3 = 343$ absent), $x_4 + 61 = 631{,}620 \equiv 0 \pmod{121}$ ($j = 61$ has $v_{11} = 2$), and $x_4 + 72 \equiv 6 \cdot 13 \pmod{169}$, so no multiple of $13^2 = 169$ lies in $I$ ($v_{13}(x_4 + j) \le 1$ for all $j$).
+\begin{itemize}
+\item On $A_3$ (demand $(2, 2, 2)$): if $72 \in B$, residual demand $(1, 1, 1)$ across disjoint single-prime supports requires at least $1 + 1 + 1 = 3$ further picks ($|B| \ge 4$); if $72 \notin B$, covering $(2, 2, 2)$ with caps $(2, 2, 1)$ requires at least $1 + 1 + 2 = 4$ picks (attained by $j \in \{2, 7, 20, 61\}$). Thus $\tau(A_3, I) = 4$.
+\item On $A_4$ (demand $(4, 2, 2)$): if $72 \in B$, residual demand $(3, 1, 1)$ with $v_7 \le 2$ requires at least $\lceil 3 / 2 \rceil + 1 + 1 = 4$ further picks ($|B| \ge 5$); if $72 \notin B$, disjoint demands $(4, 2, 2)$ with caps $(2, 2, 1)$ require at least $2 + 1 + 2 = 5$ picks (attained by $j \in \{2, 7, 20, 51, 61\}$). Thus $\tau(A_4, I) = 5$.
+\end{itemize}
+\end{proof}
+
+\begin{proposition}[$g(5) \ge 6$ and $g(6) \ge 8$]
+\label{prop:g56}
+Let $x_6 = 581{,}200{,}167$ and $I = \{x_6 + 1, \dots, x_6 + 437\}$. Define
+\[
+A_6 = \{221, 289, 299, 323, 391, 437\} = \{13 \cdot 17, \; 17^2, \; 13 \cdot 23, \; 17 \cdot 19, \; 17 \cdot 23, \; 19 \cdot 23\},
+\]
+and $A_5 = A_6 \setminus \{221\} = \{289, 299, 323, 391, 437\}$. Then $\tau(A_5, I) = 6$ and $\tau(A_6, I) = 8$.
+\end{proposition}
+\begin{proof}
+The active primes are $(13, 17, 19, 23)$, with demand $(2, 5, 2, 3)$ on $A_6$ and $(1, 4, 2, 3)$ on $A_5$. At the center offset $j = 219$, $x_6 + 219 = 581{,}200{,}386 = 2 \cdot 3 \cdot 59 \cdot 13 \cdot 17^2 \cdot 19 \cdot 23$, which has valuation vector $(1, 2, 1, 1)$. For every $j \in \{1, \dots, 437\} \setminus \{219\}$, $|j - 219| \le 218 < 13 \cdot 17 = 221$, so $x_6 + j$ is divisible by at most one prime in $\{13, 17, 19, 23\}$. Furthermore:
+\begin{itemize}
+\item Since $17^2 = 289 > 218$ and $17^2 \mid (x_6 + 219)$, no $j \neq 219$ in $I$ is divisible by $17^2$; thus $v_{17}(x_6 + j) \le 1$ for all $j \neq 219$.
+\item Since $x_6 + 219 \equiv 11 \cdot 23 = 253 \pmod{529}$, the nearest multiples of $23^2 = 529$ lie at $219 - 253 = -34 < 1$ and $219 + 276 = 495 > 437$; thus $v_{23}(x_6 + j) \le 1$ for all $j \in \{1, \dots, 437\}$.
+\item For $p = 13$ and $p = 19$, $j \in \{128, 297\}$ satisfy $v_{13}(x_6 + j) = 2$ (with $13^3 = 2197$ absent), and $j = 86$ satisfies $v_{19}(x_6 + 86) = 2$ (with $19^3 = 6859$ absent).
+\end{itemize}
+Consequently, every element of $I \setminus \{x_6 + 219\}$ supplies at most one active prime, bounded by $(2, 1, 2, 1)$:
+\begin{itemize}
+\item On $A_6$ (demand $(2, 5, 2, 3)$): if $x_6 + 219 \in B$, residual demand $(1, 3, 1, 2)$ across disjoint prime supports with $v_{17}, v_{23} \le 1$ requires at least $1 + 3 + 1 + 2 = 7$ additional elements ($|B| \ge 8$, attained by $j \in \{12, 15, 32, 35, 49, 86, 128, 219\}$); if $x_6 + 219 \notin B$, covering $(2, 5, 2, 3)$ requires at least $1 + 5 + 1 + 3 = 10$ elements. Hence $\tau(A_6, I) = 8$.
+\item On $A_5$ (demand $(1, 4, 2, 3)$): if $x_6 + 219 \in B$, residual demand $(0, 2, 1, 2)$ requires at least $0 + 2 + 1 + 2 = 5$ additional elements ($|B| \ge 6$, attained by $j \in \{10, 12, 15, 32, 35, 219\}$); if $x_6 + 219 \notin B$, covering $(1, 4, 2, 3)$ requires at least $1 + 4 + 1 + 3 = 9$ elements. Hence $\tau(A_5, I) = 6$.
+\end{itemize}
+\end{proof}
+
+\begin{proposition}[$g(7) \ge 9$ and $g(8) \ge 11$]
+\label{prop:g78}
+Let $P = \{41, 43, 47, 53\}$ and $Q = \{59, 61\}$, and set
+\[
+A_8 = P \times Q = \{2419, 2501, 2537, 2623, 2773, 2867, 3127, 3233\}, \quad A_7 = A_8 \setminus \{2419\},
+\]
+with $M = 53 \cdot 61 = 3{,}233$. Let $x_8 = 85{,}145{,}283{,}391{,}654{,}366{,}755$ and $I = \{x_8 + 1, \dots, x_8 + 3233\}$. Then $\tau(A_8, I) = 11$ and $\tau(A_7, I) = 9$.
+\end{proposition}
+\begin{proof}
+By the Chinese Remainder Theorem modulo $\prod_{p \in P \cup Q} p^2$, $y := x_8 + 1617$ satisfies $y \equiv p \pmod{p^2}$ for each $p \in P$ and $y \equiv ((p - 1) / 2) p \pmod{p^2}$ for each $p \in Q$ (namely $29 \cdot 59 = 1711 \pmod{3481}$ and $30 \cdot 61 = 1830 \pmod{3721}$). Hence $j = 1617$ has valuation $1$ at all six primes in $P \cup Q$. For every $j \in \{1, \dots, 3233\} \setminus \{1617\}$, $|j - 1617| \le 1616 < 41 \cdot 43 = 1763$, so $x_8 + j$ is divisible by at most one prime in $P \cup Q$; moreover, since $1616 < 1711 < 3481 - 1711 = 1770$ and $1616 < 1830 < 1891$, no multiple of $59^2$ or $61^2$ lies in $I$, giving $v_{59}(x_8 + j) \le 1$ and $v_{61}(x_8 + j) \le 1$ for all $j$.
+\begin{itemize}
+\item On $A_8$, the demand is $(2, 2, 2, 2, 4, 4)$. If $1617 \in B$, residual demand $(1, 1, 1, 1, 3, 3)$ across disjoint single-prime supports with $v_{59}, v_{61} \le 1$ forces $|B| \ge 1 + (1 + 1 + 1 + 1 + 3 + 3) = 11$ (attained by $1617$, $1617 - p$ for $p \in P$, and $1617 \pm q, 1617 - 2q$ for $q \in Q$). If $1617 \notin B$, each prime in $P$ needs at least $1$ element and each prime in $Q$ needs at least $4$ elements, giving $|B| \ge 4 + 8 = 12$. Thus $\tau(A_8, I) = 11$.
+\item On $A_7 = A_8 \setminus \{41 \cdot 59\}$, the demand is $(1, 2, 2, 2, 3, 4)$. Including $1617$ leaves $(0, 1, 1, 1, 2, 3)$, forcing $|B| \ge 1 + 8 = 9$; excluding $1617$ forces $|B| \ge 1 + 1 + 1 + 1 + 3 + 4 = 11$. Deleting $1617 - 41$ and $1617 + 59$ from the $11$-element cover gives size $9$, so $\tau(A_7, I) = 9$.
+\end{itemize}
+\end{proof}
+
+\section{Structural Reductions and Cumulative-GCD Slot Packing}
+
+Fix $n \ge 2$ and a target upper bound $B_n \ge n$. To prove $g(n) \le B_n$, suppose by strong induction on $M = a_n$ that $\tau(A', I') \le B_n$ holds for all $n$-sets $A'$ with $\max(A') < M$, and assume for contradiction that some $A = \{a_1 < \dots < a_n = M\}$ and interval $I = \{x + 1, \dots, x + M\}$ satisfy $\tau(A, I) \ge B_n + 1$. Among all such counterexamples at maximum $M$, choose $A$ maximizing the sum $\sum_{i = 1}^n a_i$.
+
+\begin{lemma}[Interval splitting, divisor-closure maximality, and coprime subadditivity]
+\label{lem:struct}
+Let $(A, I)$ be a sum-maximal counterexample with $\tau(A, I) \ge B_n + 1$ at $M = a_n$, assuming $g(n - 1) \le B_n - 1$ and $g(k) + (n - k) \le B_n$ for $1 \le k \le n - 1$. Then:
+\begin{enumerate}
+\item \emph{(Minimum element and sub-interval bounds):} $a_1 > \lfloor M / B_n \rfloor$, and for every $1 \le k \le n - 1$,
+\[
+a_k > L_{n, k}(M) := \left\lceil \frac{M - (n - k)}{n - k + 1} \right\rceil = \left\lfloor \frac{M}{n - k + 1} \right\rfloor.
+\]
+\item \emph{(Divisor-closure maximality):} For every $a_i \in A$ and integer $m \ge 2$ with $m a_i \le M$, we have $m a_i \in A$.
+\item \emph{(Common-factor induction):} $\gcd(a_1, \dots, a_n) = 1$; in particular no prime divides all $n$ elements of $A$.
+\item \emph{(Prime-set and component subadditivity):} For any partition of the active primes $P(A) = S_1 \sqcup S_2$, $\tau(A, I) \le \tau(D|_{S_1}, I) + \tau(D|_{S_2}, I)$. In particular, if $g(k) + g(n - k) \le B_n$ for all $1 \le k \le n - 1$, then the $n$-vertex graph on $A$ with edges $\gcd(a_i, a_j) > 1$ is connected.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(1) Since $g(n - 1) \le B_n - 1$, covering $A \setminus \{a_1\}$ takes $|B'| \le g(n - 1) \le B_n - 1$ elements of $I$. If $a_1 \le \lfloor M / B_n \rfloor$, then $I$ contains at least $B_n > |B'|$ multiples of $a_1$, leaving an untouched multiple $u \in I \setminus B'$ of $a_1$ so that $B' \cup \{u\}$ has size $\le B_n$. Similarly, choosing multiples $b_{k + 1}, \dots, b_n \in I$ of $a_{k + 1}, \dots, a_n$ deletes at most $n - k$ elements from $I$, leaving at most $n - k + 1$ contiguous blocks of total length $\ge M - (n - k)$; the longest block $I^*$ has length $\ge \lceil (M - (n - k)) / (n - k + 1) \rceil = \lfloor M / (n - k + 1) \rfloor$. If $a_k \le |I^*|$, covering $\{a_1, \dots, a_k\}$ inside $I^*$ takes $\le g(k)$ elements disjoint from $\{b_{k + 1}, \dots, b_n\}$, totaling $\le g(k) + (n - k) \le B_n$.
+
+(2) If $a_i \in A$ and $m \ge 2$ satisfy $m a_i \le M$ with $m a_i \notin A$, then $m a_i < M$ (as $a_n = M$). Setting $A' = (A \setminus \{a_i\}) \cup \{m a_i}$ gives $|A'| = n$, $\max(A') = M$, $\sum A' > \sum A$, and $\prod A \mid m \prod A = \prod A'$. By sum-maximality, $\tau(A', I) \le B_n$, whence $\tau(A, I) \le B_n$.
+
+(3) If a prime $p$ divides every $a_i \in A$, then $I$ contains $M / p$ consecutive multiples $p(y + 1), \dots, p(y + M / p)$ of $p$ ($y = \lfloor x / p \rfloor$). Applying the induction hypothesis at $M / p < M$ to $A / p = \{a_1 / p, \dots, M / p\}$ on $\{y + 1, \dots, y + M / p\}$ and multiplying by $p$ yields a cover of size $\le B_n$.
+
+(4) If $B_1, B_2 \subseteq I$ cover the demands on disjoint prime sets $S_1, S_2$, then $B_1 \cup B_2$ covers $S_1 \sqcup S_2$ with $|B_1 \cup B_2| \le |B_1| + |B_2|$.
+\end{proof}
+
+\begin{theorem}[Universal Cumulative-GCD Slot Theorem and First/Repeat Decomposition]
+\label{thm:cumgcd}
+Let $I$ be any interval of $M$ consecutive positive integers, and let $h_0, h_1, \dots, h_{\ell - 1} \in \{1, \dots, M\}$ ($1 \le \ell \le M$).
+\begin{enumerate}
+\item If $\gcd\bigl(\prod_{i = 0}^{j - 1} h_i, h_j\bigr) \le \lfloor M / (j + 1) \rfloor$ holds for every $1 \le j < \ell$, then there exist distinct elements $b_0, \dots, b_{\ell - 1} \in I$ whose product $\prod_{j = 0}^{\ell - 1} b_j$ is divisible by $\prod_{j = 0}^{\ell - 1} h_j$.
+\item \emph{(First/Repeat decomposition):} If each slot is factored as $h_j = f_j g_j \le M$ ($0 \le j < \ell$) such that $\gcd\bigl(\prod_{i = 0}^{j - 1} h_i, f_j\bigr) = 1$ while $g_j \le \lfloor M / (j + 1) \rfloor$, then $\gcd\bigl(\prod_{i < j} h_i, h_j\bigr) \le \lfloor M / (j + 1) \rfloor$ holds for all $1 \le j < \ell$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(1) Inductively select distinct $b_0, \dots, b_{j - 1} \in I$ so that $H_{j - 1} := \prod_{i = 0}^{j - 1} h_i$ divides $\Pi_{j - 1} := \prod_{i = 0}^{j - 1} b_i$ (starting with a multiple $b_0 \in I$ of $h_0 \le M$). At step $j \ge 1$, since $1 \le h_j \le M$, the interval $I$ contains at least one multiple $m \in I$ of $h_j$.
+\begin{itemize}
+\item \emph{Case 1 ($m \notin \{b_0, \dots, b_{j - 1}\}$):} Set $b_j := m$. Since $h_j \mid b_j$ and $H_{j - 1} \mid \Pi_{j - 1}$, we have $H_j = H_{j - 1} h_j \mid \Pi_{j - 1} b_j = \Pi_j$.
+\item \emph{Case 2 (every multiple of $h_j$ in $I$ lies in $\{b_0, \dots, b_{j - 1}\}$):} Fix $b_i$ ($0 \le i < j$) with $h_j \mid b_i$, so $h_j \mid \Pi_{j - 1}$. Letting $g_j^* := \gcd(H_{j - 1}, h_j) \le \lfloor M / (j + 1) \rfloor$, both $H_{j - 1}$ and $h_j$ divide $\Pi_{j - 1}$, whence $\lcm(H_{j - 1}, h_j) = (H_{j - 1} h_j) / g_j^*$ divides $\Pi_{j - 1}$. Because $|I \cap g_j^* \mathbb{Z}| \ge \lfloor M / g_j^* \rfloor \ge j + 1$, the pigeonhole principle yields $b_j \in I \setminus \{b_0, \dots, b_{j - 1}\}$ divisible by $g_j^*$, giving $H_j = g_j^* \lcm(H_{j - 1}, h_j) \mid b_j \Pi_{j - 1} = \Pi_j$.
+\end{itemize}
+
+(2) Since $\gcd(H_{j - 1}, f_j) = 1$, $\gcd(H_{j - 1}, f_j g_j) = \gcd(H_{j - 1}, g_j) \le g_j \le \lfloor M / (j + 1) \rfloor$.
+\end{proof}
+
+\begin{corollary}[Two-element absorption and bipartite spanning-forest bound]
+\label{cor:absorb}
+\begin{enumerate}
+\item For any $n \ge 2$, $M = a_n$, and any $a_* \in A \setminus \{M\}$, setting $(h_0, h_1) = (M, a_*)$ satisfies $\gcd(M, a_*) \le \lfloor M / 2 \rfloor$ (as $a_* < M$ cannot be a multiple of $M$, so $\gcd(M, a_*)$ is a proper divisor of $M$); in particular $g(2) = 2$, and covering $\{a_*, M\}$ uses at most $2$ elements of $I$, leaving $B_n - 2$ disjoint tail slots $[\lfloor M / 3 \rfloor, \dots, \lfloor M / B_n \rfloor]$ for $A \setminus \{a_*, M\}$.
+\item Let $A \subseteq P \times Q$ ($|A| = n$) be a subgraph of a complete bipartite semiprime grid on disjoint prime sets $P, Q$ ($|P| = r$, $|Q| = s$), with $\max(P \cup Q) \le \lfloor M / L \rfloor$ where $L := 2n - r - s + 1$. Then $\tau(A, I) \le 2n - r - s + 1$ for every interval $I$ of length $M$.
+\end{enumerate}
+\end{corollary}
+\begin{proof}
+Part~(1) is immediate from Theorem~\ref{thm:cumgcd}(1) with $\ell = 2$. For Part~(2), choose a spanning forest $F \subseteq A$ of $(P \cup Q, A)$ with $|F| \ge r + s - 1$ edges, ordered so each non-root edge shares at most one endpoint with earlier edges in $F$. Placing the $|F|$ semiprimes of $F$ in slots $0, \dots, |F| - 1$ gives $\gcd(H_{j - 1}, h_j) \in \{1\} \cup P \cup Q \le \lfloor M / L \rfloor \le \lfloor M / (j + 1) \rfloor$, and placing the remaining $2(n - |F|)$ prime factors of $A \setminus F$ one per slot uses $|F| + 2(n - |F|) = 2n - |F| \le 2n - r - s + 1 = L$ slots in Theorem~\ref{thm:cumgcd}(1).
+\end{proof}
+
+Note that for Proposition~\ref{prop:g78} ($n = 8$, $r = 4$, $s = 2$), Corollary~\ref{cor:absorb}(2) gives $2(8) - 4 - 2 + 1 = 11$, matching $\tau(A_8, I) = 11$ with equality; for $K_{2, 3}$ ($n = 6$, $r = 3$, $s = 2$), it gives $2(6) - 3 - 2 + 1 = 8$.
+
+\begin{lemma}[Universal prime-support elimination]
+\label{lem:support}
+For any prime $P$ dividing $\prod A$, write $d_P(A) := |\{a \in A : P \mid a\}|$. In a minimal counterexample $(A, I)$ with $\tau(A, I) \ge B_n + 1$:
+\begin{enumerate}
+\item If $P \ge g(n - 1) + 1$, then $d_P(A) \neq 1$ (and $D_P(A) \neq 1$).
+\item If $P \ge B_n$ and $g(n - 2) + 3 \le B_n$, then $d_P(A) \neq 2$.
+\end{enumerate}
+In particular: (i) for $(n, B_3) = (3, 4)$ ($M \ge 10$), no prime $P \ge 5$ divides $\prod A$; (ii) for $(n, B_4) = (4, 5)$ ($M \ge 14$), every prime $P \ge 7$ dividing $\prod A$ has $d_P(A) = 3$ (and $D_5(A) \neq 1$); (iii) for $(n, B_5) = (5, 6)$ ($M \ge 14$), every prime $P \ge 7$ dividing $\prod A$ has $d_P(A) \in \{2, 3, 4\}$ (and $D_7 \neq 1$); and (iv) for $(n, B_6) = (6, 8)$ ($M \ge 22$), every prime $P \ge 11$ dividing $\prod A$ satisfies $3 \le d_P(A) \le 5$, and $D_7(A) \neq 1$.
+\end{lemma}
+\begin{proof}
+(1) Suppose $d_P(A) = 1$, with $a_i = s_i P^e \le M$ ($P \nmid s_i$). Then $s_i \le M / P$, so $\lfloor M / s_i \rfloor \ge P \ge g(n - 1) + 1$. Let $B' \subseteq I$ ($|B'| \le g(n - 1)$) cover $A \setminus \{a_i\}$, and let $b_i \in I$ be a multiple of $a_i$. If $b_i \notin B'$, then $B' \cup \{b_i\}$ covers $A$ in $\le g(n - 1) + 1 \le B_n$ picks; if $b_i \in B'$, then since $P \nmid \prod_{r \neq i} a_r$, $b_i$ already supplies $P^e$ free of conflict while $I \setminus B'$ contains an untouched multiple $u$ of $s_i$, so $B' \cup \{u\}$ covers $A$ in $\le B_n$ picks.
+
+(2) Suppose $d_P(A) = 2$, with $a_i = s_i P^{e_i}$ and $a_j = s_j P^{e_j}$ ($1 \le e_i \le e_j$, $P \nmid s_i s_j$). Because $a_i \neq a_j$ are distinct multiples of $P^{e_i}$ in $[1, M]$, we have $2 P^{e_i} \le \max(a_i, a_j) \le M$, so $|I \cap P^{e_i} \mathbb{Z}| \ge 2$. Also $s_i, s_j \le M / P \le M / B_n$, giving $\lfloor M / s_i \rfloor, \lfloor M / s_j \rfloor \ge B_n$. Let $B'' \subseteq I$ ($|B''| \le g(n - 2) \le B_n - 3$) cover $A \setminus \{a_i, a_j\}$ (coprime to $P$), let $b_j \in I$ be a multiple of $s_j P^{e_j}$, and put $B_P = \{b_j\}$ if $P^{e_i + e_j} \mid b_j$ or $B_P = \{b_j, m_2\}$ for $m_2 \in (I \cap P^{e_i} \mathbb{Z}) \setminus \{b_j\}$ otherwise. If $b_j \notin B''$, $|B'' \cup B_P| \le B_n - 1$ covers $s_j P^{e_i + e_j} \prod_{r \notin \{i, j\}} a_r$ plus one untouched multiple of $s_i$ ($\le B_n$); if $b_j \in B''$, $|B'' \cup B_P| \le B_n - 2$ covers $P^{e_i + e_j} \prod_{r \notin \{i, j\}} a_r$ plus two distinct untouched multiples of $s_j$ and $s_i$ ($\le B_n$).
+\end{proof}
+
+\begin{lemma}[$g(d)$-subset tail decoupling]
+\label{lem:tail}
+Suppose a prime $P$ divides exactly $d \in \{3, \dots, n - 1\}$ elements of $A$, and write $A_P = \{P c_1 < \dots < P c_d\}$ with $P \nmid c_1 \cdots c_d$. Then $I$ contains a subset $B_1 \subseteq I \cap P \mathbb{Z}$ of size $|B_1| \le g(d)$ covering $\prod_{a \in A_P} a$. Consequently, if $\prod_{a \in A \setminus A_P} a$ factors into $B_n - g(d)$ integers bounded by $\lfloor M / (g(d) + 1) \rfloor, \dots, \lfloor M / B_n \rfloor$, then sequential untouched multiples in $I \setminus B_1$ cover $A$ in $\le B_n$ elements.
+\end{lemma}
+\begin{proof}
+Setting $k = \lfloor x / P \rfloor$, the first $c_d \le \lfloor M / P \rfloor$ multiples of $P$ in $I$ are $P(k + 1), \dots, P(k + c_d)$. Applying the definition of $g(d)$ to $\{c_1, \dots, c_d\}$ on $\{k + 1, \dots, k + c_d\}$ yields $B'_1$ ($|B'_1| \le g(d)$) covering $c_1 \cdots c_d$; setting $B_1 = \{P y : y \in B'_1\} \subseteq I$ (padded inside $\{k + 1, \dots, k + c_d\}$ if $|B'_1| < d$) supplies $P^d c_1 \cdots c_d$, and each tail factor $h_r \le \lfloor M / (g(d) + r) \rfloor$ has $\ge g(d) + r$ multiples in $I$.
+\end{proof}
+
+\section{Finite Certificates and Analytic Closure for $3 \le n \le 6$}
+
+\begin{lemma}[Closed-form descending factor-packing bound]
+\label{lem:ffd}
+Let $C_1 \ge C_2 \ge \dots \ge C_t \ge 1$ be slot capacities, and let $Q = \prod_{q \in S} q^{e_q}$ be sorted in nonincreasing prime order. If greedy tightest-fit placement fails at a first prime $p \in S$ with $p \le C_t$, every bin satisfies $B_k \ge \max(\lfloor C_k / p \rfloor + 1, p)$, forcing
+\[
+\prod_{q \in S,\, q \ge p} q^{e_q} \;\ge\; T_{C_1, \dots, C_t}(p) := p \prod_{k = 1}^t \max\bigl(\lfloor C_k / p \rfloor + 1, p\bigr).
+\]
+Moreover, among $n$ distinct integers in $[1, M]$, the $p_{\max}$-part for $p_{\max} = \max(S)$ satisfies $p_{\max}^{e_{p_{\max}}} \le M^n / n!$.
+\end{lemma}
+
+\begin{theorem}[Exact values $g(3) = 4$, $g(4) = 5$, and $g(5) = 6$]
+\label{thm:g345}
+We have $g(3) = 4$, $g(4) = 5$, and $g(5) = 6$.
+\end{theorem}
+\begin{proof}
+Lower bounds follow from Propositions~\ref{prop:g34} and~\ref{prop:g56}. For the upper bounds:
+\begin{enumerate}
+\item \emph{$g(3) \le 4$:} By Lemma~\ref{lem:support}(i), for $M \ge 10$ every prime $P \ge 5$ is eliminated ($d_P \in \{1, 2\}$ by Lemma~\ref{lem:support}, $d_P = 3$ by Lemma~\ref{lem:struct}(3)), leaving $\{2, 3\}$-smooth sets. On capacities $(M, \lfloor M / 2 \rfloor, \lfloor M / 3 \rfloor, \lfloor M / 4 \rfloor)$, Lemma~\ref{lem:ffd} gives $T(2) > M^3$ and $T(3) > M^3 / 6$ for all $M \ge 184$, and direct Chinese Remainder verification checks $4 \le M \le 183$ ($0$ counterexamples).
+\item \emph{$g(4) \le 5$:} By Lemma~\ref{lem:support}(ii), for $M \ge 14$ every prime $P \ge 7$ dividing $\prod A$ has $d_P(A) = 3$. If no prime $\ge 7$ divides $\prod A$ ($\{2, 3, 5\}$-smooth), capacities $(M, \dots, \lfloor M / 5 \rfloor)$ satisfy $T(2), T(3) > M^4$ and $T(5) > M^4 / 24$ for all $M \ge 9{,}702$, and finite search checks all $\{2, 3, 5\}$-smooth $M \le 9{,}701$. Otherwise, let $P_1 = \max S_7(A) \ge 7$ (with $d_{P_1}(A) = 3$) and let $x_1$ be the unique element of $A \setminus A_{P_1}$:
+\begin{itemize}
+\item If $P_1 > \lfloor M / 4 \rfloor$, then $v_{P_1}(a) = 1$ for all $a \in A_{P_1}$ and the three cofactors satisfy $1 \le c_1 < c_2 < c_3 \le 3$, forcing $\{c_1, c_2, c_3\} = \{1, 2, 3\}$. Any $3$ consecutive multiples of $P_1$ in $I$ cover $P_1^3 \cdot 6$ in $3$ picks, leaving $2$ tail slots $[\lfloor M / 4 \rfloor, \lfloor M / 5 \rfloor]$ for the $\{2, 3, 5\}$-smooth element $x_1 < M$ (closed by Lemma~\ref{lem:ffd} for $M \ge 120$).
+\item If $P_1 \le \lfloor M / 4 \rfloor$ and $v_{P_1}(a) \le 1$ on $A_{P_1}$: when $x_1 \le \lfloor M / 2 \rfloor$, Lemma~\ref{lem:struct}(1) gives $x_1 \ge a_1 > \lfloor M / 5 \rfloor$, so $P_1 x_1 > 7(M / 5) > M$; hence $I$ contains a multiple $b_0$ of $x_1$ with $P_1 \nmid b_0$, which is automatically disjoint from the $g(3) = 4$ cover $B_1 \subseteq I \cap P_1 \mathbb{Z}$ of $A_{P_1}$ supplied by Lemma~\ref{lem:tail}. When $x_1 > \lfloor M / 2 \rfloor$, Corollary~\ref{cor:absorb}(1) absorbs $(M, a_3)$ in $2$ picks and leaves tail slots $[\lfloor M / 3 \rfloor, \lfloor M / 4 \rfloor, \lfloor M / 5 \rfloor]$ for $a_1 a_2 < M^2$ (closed by Lemma~\ref{lem:ffd} for $M \ge 7{,}345$, and checked below $7{,}345$ via~\cite{bergstrom26smallcode}).
+\item If $P_1^2 \mid a$ for some $a \in A_{P_1}$, then $P_1 \le \sqrt{M}$ and every prime dividing $\prod A$ lies in $[2, \sqrt{M}]$; absorbing $(M, a_3)$ via Corollary~\ref{cor:absorb}(1) and packing $a_1 a_2 < M^2$ into $[\lfloor M / 3 \rfloor, \lfloor M / 4 \rfloor, \lfloor M / 5 \rfloor]$ closes all $M \ge 7{,}345$ (and finite verification checks $M \le 7{,}344$~\cite{bergstrom26smallcode}).
+\end{itemize}
+\item \emph{$g(5) \le 6$:} By Lemma~\ref{lem:struct}(3) and Lemma~\ref{lem:support}(iii), for $M \ge 14$ every prime $P \ge 7$ dividing $\prod A$ has $d_P(A) \in \{2, 3, 4\}$. On $\{2, 3, 5\}$-smooth sets ($|S_7(A)| = 0$), Lemma~\ref{lem:ffd} on $(M, \dots, \lfloor M / 6 \rfloor)$ closes all $M \ge 20{,}001$. When $S_7(A) \neq \emptyset$ with $P_1 = \max S_7(A)$:
+\begin{itemize}
+\item If $d_{P_1}(A) \in \{3, 4\}$ and $v_{P_1} \le 1$, Lemma~\ref{lem:tail} decouples $A_{P_1}$ in $g(d_{P_1}) \in \{4, 5\}$ picks inside $I \cap P_1 \mathbb{Z}$, leaving $6 - g(d_{P_1}) \in \{1, 2\}$ tail slots $[\lfloor M / (d_{P_1} + 2) \rfloor, \dots, \lfloor M / 6 \rfloor]$ for the remaining $5 - d_{P_1}$ elements.
+\item If $d_{P_1}(A) = 2$ (which requires $P_1 = 7$ by Lemma~\ref{lem:support}(2)) or $v_{P_1} \ge 2$ ($P_1 \le \sqrt{M}$), Corollary~\ref{cor:absorb}(1) absorbs $(M, a_4)$ in $2$ picks and packs $a_1 a_2 a_3 < M^3$ into $[\lfloor M / 3 \rfloor, \dots, \lfloor M / 6 \rfloor]$.
+\end{itemize}
+All remaining finite configurations below the analytic thresholds are verified via~\cite{bergstrom26smallcode} ($0$ counterexamples).
+\end{enumerate}
+\end{proof}
+
+\begin{theorem}[Exact value $g(6) = 8$]
+\label{thm:g6}
+For every $6$-element set $A \subseteq \mathbb{Z}_{\ge 2}$ and every interval $I$ of $\max(A)$ consecutive positive integers, $\tau(A, I) \le 8$. Combined with Proposition~\ref{prop:g56}, $g(6) = 8$.
+\end{theorem}
+\begin{proof}
+Assume $(A, I)$ is a minimal counterexample at $M = a_6$. Table~\ref{tab:tools} summarizes the certified parameters across both regimes.
+\begin{enumerate}
+\item \emph{Finite regime ($7 \le M \le 3{,}481$):} For $7 \le M \le 63$, exhaustive enumeration of all GCD-connected, divisor-closed $6$-sets surviving Lemma~\ref{lem:struct}(1) verifies $\tau(A, I) \le 8$ via prime-power Chinese Remainder branch-and-bound ($15{,}709$ universal-$x$ leaves;~\cite{bergstrom26smallcode}). For $64 \le M \le 3{,}481$, every prime $P > \lfloor \sqrt{M} \rfloor$ satisfies $v_P(a) \le 1$ and $d_P(A) \in \{0, 3, 4, 5, 6\}$ by Lemma~\ref{lem:support}(iv); partitioning candidate sets into the six large-prime multiplicity patterns $\emptyset$, $(3)$, $(4)$, $(5)$, $(6)$, and $(3, 3)$ with $(L(x), x)$ smooth-bucket pruning, Lemma~\ref{lem:tail}, and Theorem~\ref{thm:cumgcd} certifies all $3{,}418$ values $64 \le M \le 3{,}481$ ($3$ Chinese Remainder leaves at $M \in \{72, 80\}$ and $0$ residual leaves across $81 \le M \le 3{,}481$, pruning $24{,}628{,}129{,}260$ branches in the accompanying certificate archive~\cite{bergstrom26smallcode}).
+\item \emph{Analytic regime ($M \ge 3{,}482$):} Let $S_{11}(A) = \{p \ge 11 : p \mid \prod A\}$; by Lemma~\ref{lem:struct}(3) and Lemma~\ref{lem:support}(iv), every $P \in S_{11}(A)$ has $3 \le d_P(A) \le 5$, and $D_7(A) \neq 1$:
+\begin{itemize}
+\item \textbf{Case 1 ($|S_{11}(A)| = 0$, $\{2, 3, 5, 7\}$-smooth sets):} On $(M, \lfloor M / 2 \rfloor, \dots, \lfloor M / 8 \rfloor)$, Lemma~\ref{lem:ffd} gives $T(p) > M^6$ for $p \in \{2, 3, 5\}$ and $T(7) > M^6 / 720$ for all $M \ge 56{,}125$. For $3{,}482 \le M \le 56{,}124$, there are exactly $354$ $\{2, 3, 5, 7\}$-smooth values of $M$, all verified computationally via~\cite{bergstrom26smallcode}.
+\item \textbf{Case 2 ($|S_{11}(A)| = 1$, $S_{11}(A) = \{P_1\}$):} If $P_1^2 \mid a$ for some $a \in A$, then $P_1 \le \sqrt{M}$, covered under the bounded-prime reduction of Subcase~3b below; otherwise $v_{P_1}(a) \le 1$ for all $a \in A$ with $d = d_{P_1}(A) \in \{3, 4, 5\}$, and the $6 - d$ elements of $A \setminus A_{P_1}$ are $\{2, 3, 5, 7\}$-smooth in $(\lfloor M / 8 \rfloor, M)$:
+\begin{itemize}
+\item $d = 5$ ($g(5) = 6$, tail $[\lfloor M / 7 \rfloor, \lfloor M / 8 \rfloor]$): for every $M \ge 3{,}137$ and prime $q \le \sqrt{M}$, $q(\lfloor M / (7q) \rfloor + 1)(\lfloor M / (8q) \rfloor + 1) > M^2 / (56q) \ge M^{3/2} / 56 > M \ge x_1$.
+\item $d = 4$ ($g(4) = 5$, tail $[\lfloor M / 6 \rfloor, \lfloor M / 7 \rfloor, \lfloor M / 8 \rfloor]$): Lemma~\ref{lem:ffd} closes all $M \ge 16{,}465$ ($T(2), T(3), T(5) > M^2$, $T(7) > M^2 / 2$), and every $\{2, 3, 5, 7\}$-smooth pair $(x_1, x_2)$ on $[3482, 16464]$ is verified at the monotone lower endpoint $M_{\min} = \max(3482, x_2)$~\cite{bergstrom26smallcode}.
+\item $d = 3$ ($g(3) = 4$, tail $[\lfloor M / 5 \rfloor, \dots, \lfloor M / 8 \rfloor]$): Lemma~\ref{lem:ffd} closes all $M \ge 576{,}241$, and every divisor-closed $\{2, 3, 5, 7\}$-smooth triple $(x_1, x_2, x_3)$ up to $576{,}240$ is verified at $M_{\min} = \max(3482, x_3)$~\cite{bergstrom26smallcode}.
+\end{itemize}
+\item \textbf{Case 3 ($|S_{11}(A)| \ge 2$):} Let $P_1 = \max S_{11}(A) \ge 13$.
+\begin{itemize}
+\item \textbf{Subcase 3a ($P_1 > \lfloor M / 8 \rfloor$):} Since $P_1 \ge \lfloor M / 8 \rfloor + 1 > M / 8$, we have $11 P_1 > 8 P_1 > M$; thus no prime $\ge 11$ other than $P_1$ can divide any element of $A_{P_1}$, and $P_1^2 > M$. Pick any $P_2 \in S_{11}(A) \setminus \{P_1\}$; since $d_{P_1}(A) \ge 3$, $d_{P_2}(A) \ge 3$, and $A_{P_1} \cap A_{P_2} = \emptyset$, we must have $|A_{P_1}| = |A_{P_2}| = 3$ and $A = A_{P_1} \sqcup A_{P_2}$. Writing $A_{P_1} = \{P_1 c_1, P_1 c_2, P_1 c_3\}$, the strict inequality $8 P_1 > M$ forces $1 \le c_1 < c_2 < c_3 \le 7$, so $c_1 c_2 c_3 \le 5 \cdot 6 \cdot 7 = 210 \le \lfloor M / 8 \rfloor$ (for $M \ge 1{,}680$). Applying Lemma~\ref{lem:tail} to $P_2$ yields $B_2 \subseteq I \cap P_2 \mathbb{Z}$ covering $A_{P_2}$ in $|B_2| \le g(3) = 4$ picks. Because $P_1 P_2 \ge 11 P_1 > M$, no element of $I$ is divisible by $P_1 P_2$, so $B_2$ contains zero multiples of $P_1$. Since $I$ contains $\ge \lfloor M / P_1 \rfloor \ge c_3 \ge 3$ multiples of $P_1$, adjoining any $3$ distinct multiples of $P_1$ in $I$ (automatically disjoint from $B_2$) plus $1$ untouched multiple of $c_1 c_2 c_3 \le \lfloor M / 8 \rfloor$ covers $A$ in $\le 4 + 3 + 1 = 8$ picks.
+\item \textbf{Subcase 3b ($P_1 \le \lfloor M / 8 \rfloor$):} Every prime dividing $\prod A$ satisfies $p \le \lfloor M / 8 \rfloor$, and since $(M^{1/4})^4 = M$ with $M^{1/4} > 7.68$ for $M \ge 3{,}482$, every element $a_i \le M$ has at most $3$ prime factors (with multiplicity) in $\mathcal{L} := \{p \mid \prod A : p > M^{1/4}\} \subseteq S_{11}(A)$. Because $D_p(A) \ge d_p(A) \ge 3$ for every $p \in \mathcal{L}$, we obtain
+\[
+3|\mathcal{L}| \le \sum_{p \in \mathcal{L}} D_p(A) \le 3n = 18,
+\]
+so $|\mathcal{L}| \le 6$ and $\sum_{p \in \mathcal{L}} D_p(A) \le 18$. Three steps close all remaining configurations:
+\begin{enumerate}
+\item \emph{First-appearance and repeat slots:} Order $\mathcal{L} = \{q_1, \dots, q_r\}$ ($2 \le r \le 6$) by nonincreasing $D_p(A)$, and assign each $q_k$ a distinct first-appearance slot $\fs(q_k) \in \{0, \dots, 7\}$ so that $f_{\fs(q_k)} := q_k^{\min(D_{q_k}, \lfloor \log_{q_k} M \rfloor)} \le M$ (setting $f_j = 1$ on unused slots). For any repeat demand $c_k := D_{q_k} - \min(D_{q_k}, \lfloor \log_{q_k} M \rfloor) \ge 1$ (which occurs only when $q_k \le \sqrt{M}$ and $c_k \le 2$), assign $q_k^{c_k}$ to a repeat factor $g_j$ with $j > \fs(q_k)$. Since $q_k^2 \le M / 8$ whenever $c_k = 2$ (as $q_k^3 \le M$ for $D_{q_k} \ge 3$ and $q_k > M^{1/4}$ forces $q_k^2 < M^{2/3} \le M / 8$ for $M \ge 512$) and $q_k \le \lfloor M / 8 \rfloor$ whenever $c_k = 1$, every repeat factor satisfies $q_k^{c_k} \le \lfloor M / 8 \rfloor \le \lfloor M / (j + 1) \rfloor$ for all $j \le 7$. Whenever two primes $q_a, q_b \in \mathcal{L}$ co-occur in the same slot $j$, we pair primes sharing an element of $A$ (so $q_a q_b \le M$, ensuring $f_j g_j \le M$), or apply Lemma~\ref{lem:tail} to $P_1$ when $\mathcal{L} = \{P_1, P_2\}$ has multiplicity pattern $(3, 3)$ (covering $A_{P_1}$ in $g(3) = 4$ picks and packing $u_1 u_2 u_3$ into $[\lfloor M / 5 \rfloor, \lfloor M / (6 P_1) \rfloor, \lfloor M / (7 P_1) \rfloor, \lfloor M / (8 P_1) \rfloor]$). Thus Theorem~\ref{thm:cumgcd}(2) covers the entire $\mathcal{L}$-part in $8$ slots with residual capacities $C_j = \lfloor M / (f_j g_j) \rfloor$ ($0 \le j \le 7$).
+\item \emph{Small-prime capacity bound:} Let $S_{\mathrm{sm}} := \{p \mid \prod A : p \le M^{1/4}\}$. If greedy packing of $S_{\mathrm{sm}}$ into $(C_0, \dots, C_7)$ fails at a first failing prime $q \in S_{\mathrm{sm}}$, Lemma~\ref{lem:ffd} gives
+\[
+\prod_{p \in S_{\mathrm{sm}},\, p \ge q} p^{e_p} \;\ge\; q \prod_{j = 0}^7 (\lfloor C_j / q \rfloor + 1) \;>\; q \prod_{j = 0}^7 \frac{M}{f_j g_j q} \;=\; \frac{M^8}{q^7 \prod_{j = 0}^7 f_j g_j}.
+\]
+Because each $f_j g_j$ absorbs at most one denominator factor $j + 1$ in the worst-case alignment and $q \le M^{1/4}$, this forces $\prod_{p \in S_{\mathrm{sm}},\, p \ge q} p^{e_p} > M^8 / (40{,}320 q^7) \ge M^{25/4} / 40{,}320$, exceeding $M^6$ for all $M > 40{,}320^4$.
+\item \emph{Large-$M$ threshold and finite check:} To reduce the threshold below $40{,}320^4$, absorb $(M, a_5)$ in $2$ picks via Corollary~\ref{cor:absorb}(1) and pack the remaining $4$ elements $a_1 a_2 a_3 a_4 < M^4$ into the $6$ tail slots $C'_j = \lfloor M / ((j + 3) f'_j g'_j) \rfloor$ ($0 \le j \le 5$). Defining $T_6(M, q) := q \prod_{j = 0}^5 \max(\lfloor C'_j / q \rfloor + 1, q)$ across all valid $\mathcal{L}$-allocations $(f'_j, g'_j)$ and primes $q \le M^{1/4}$, we have $T_6(M, q) > M^4$ for all $M \ge 360{,}065$ (since $M^6 / (20{,}160 q^5) \ge M^{19/4} / 20{,}160 > M^4$ once $M > 20{,}160^{4/3} \approx 554{,}000$, and direct evaluation of the floor product lowers the exact cutoff to $360{,}065$). All remaining configurations with $3{,}482 \le M \le 360{,}064$ are verified computationally via~\cite{bergstrom26smallcode} ($0$ counterexamples).
+\end{enumerate}
+\end{itemize}
+\end{itemize}
+\end{enumerate}
+\end{proof}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{p{5.1cm}rp{5.5cm}}
+\toprule
+Verified Quantity & Certified Value & Verification Method \\
+\midrule
+Exact value $g(4)$ ($M = 143$, $x_4 = 631{,}559$) & $5$ & Proposition~\ref{prop:g34} + Theorem~\ref{thm:g345} finite/analytic closure \\
+Exact value $g(5)$ ($M = 437$, $x_6 = 581{,}200{,}167$) & $6$ & Proposition~\ref{prop:g56} + Theorem~\ref{thm:g345} finite/analytic closure \\
+Exact value $g(6)$ ($M = 437$, $x_6 = 581{,}200{,}167$) & $8$ & Proposition~\ref{prop:g56} + Theorem~\ref{thm:g6} hybrid proof \\
+Constructive lower bounds $g(7), g(8)$ ($M = 3{,}233$) & $\ge 9,\; \ge 11$ & Proposition~\ref{prop:g78} asymmetric $K_{2, 4}$ CRT witness at $x_8$ \\
+Certified finite $g(6) \le 8$ range $M$ & $7 \dots 3{,}481$ ($3{,}475$ rows) & Exhaustive CRT + Cumulative-GCD certificate~\cite{bergstrom26smallcode} \\
+Universal-$x$ CRT leaves ($7 \le M \le 80$) & $15{,}712$ & $0$ residual CRT leaves across $81 \le M \le 3{,}481$ \\
+Slot-pruned search branches ($7 \le M \le 3{,}481$) & $24{,}628{,}129{,}260$ & Smooth-bucket + Lemma~\ref{lem:tail} + Theorem~\ref{thm:cumgcd} pruning~\cite{bergstrom26smallcode} \\
+$\{2, 3, 5, 7\}$-smooth $M \in [3482, 56124]$ & $354$ values & Lemma~\ref{lem:ffd} closed-form + monotone smooth bridges~\cite{bergstrom26smallcode} \\
+\bottomrule
+\end{tabular}
+\caption{Summary of certified small-$n$ bounds, finite search invariants, and analytic closure thresholds.}
+\label{tab:tools}
+\end{table}
+
+\section*{Data and Code Availability}
+
+The finite verification certificate for $7 \le M \le 3{,}481$ and the standalone zero-dependency Rust and independent arbitrary-precision verification suites reproducing Propositions~\ref{prop:g34}--\ref{prop:g78} and Theorems~\ref{thm:g345}--\ref{thm:g6} are archived at Zenodo~\cite{bergstrom26smallcode} (\url{https://doi.org/10.5281/zenodo.24366897}), with the following SHA-256 digests:
+\begin{itemize}
+\item Uncompressed $3{,}475$-row certificate ($169{,}969$ bytes): {\small \texttt{65b22b54e7f3b652a20d1812ede4cd7664f12c5d230338fea9608acbd9792e68}}
+\item Zstandard-compressed certificate archive ($17{,}418$ bytes): {\small \texttt{b6368979558724d0b7934a329419a34c610cb8e25e428cba9eb758842ae11b45}}
+\item Standalone Rust verifier source: {\small \texttt{cd2cb340e3d768ba03cd309126df035d83a0f7ccc46d9016c45152e9d885fb98}}
+\item Independent arbitrary-precision verifier source: {\small \texttt{4430203d277d0ab41f5a75bd63610a7996bcf9268bd183eab5388b9851082c3a}}
+\end{itemize}
+
+\section*{Acknowledgments and Declaration of Generative AI}
+
+During the preparation of this work, the author used internal research automation (Karen, 24x AI Research) and large language model assistance (Google Gemini) for witness construction, structural lemma exploration, verification software implementation, and manuscript editing. After using these tools, the author reviewed, verified, and edited the content as needed and takes full responsibility for the mathematical correctness and content of the publication.
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
